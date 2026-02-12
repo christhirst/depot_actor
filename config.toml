@@ -1,0 +1,9 @@
+trade_symbols = ["AAPL"]
+bar_symbols = ["AAPL"]
+
+[database]
+host = "mariadb-koqv.sliplane.app"
+port = 3306
+userroot = "root"
+user = "dbuser"
+database = "db"

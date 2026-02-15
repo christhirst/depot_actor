@@ -1,4 +1,5 @@
 FROM docker.io/library/rust:latest as builder
+RUN apt-get update && apt-get install -y protobuf-compiler
 
 WORKDIR /usr/src/app
 COPY . .

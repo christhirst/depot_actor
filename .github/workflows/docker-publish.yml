@@ -49,6 +49,9 @@ jobs:
             type=sha,prefix={{branch}}-,format=short
             # Add 'latest' tag for main branch
             type=raw,value=latest,enable={{is_default_branch}}
+            
+      - name: Install protoc
+        run: sudo apt-get update && sudo apt-get install -y protobuf-compiler
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

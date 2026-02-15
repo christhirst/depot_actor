@@ -1,6 +1,9 @@
 use config::{Config, ConfigError, File};
 use serde::Deserialize;
 
+// Import proto types for conversion methods
+use crate::grpc_server::config_proto;
+
 #[derive(Debug, Deserialize, Clone)]
 pub struct SymbolConfig {
     pub name: String,
@@ -17,7 +20,7 @@ fn default_buffer_size() -> usize {
 
 impl SymbolConfig {
     /// Create from proto SymbolConfig
-    pub fn from_proto(proto: crate::grpc_server::config_proto::SymbolConfig) -> Self {
+    pub fn from_proto(proto: config_proto::SymbolConfig) -> Self {
         SymbolConfig {
             name: proto.name,
             subscribe_trades: proto.subscribe_trades,
@@ -48,7 +51,7 @@ impl DatabaseSettings {
     }
 
     /// Create from proto DatabaseConfig
-    pub fn from_proto(proto: crate::grpc_server::config_proto::DatabaseConfig) -> Self {
+    pub fn from_proto(proto: config_proto::DatabaseConfig) -> Self {
         DatabaseSettings {
             host: proto.host,
             port: proto.port as u16,
@@ -156,7 +159,7 @@ impl Settings {
     }
 
     /// Create from proto UpdateConfigRequest
-    pub fn from_proto(proto: crate::grpc_server::config_proto::UpdateConfigRequest) -> Self {
+    pub fn from_proto(proto: config_proto::UpdateConfigRequest) -> Self {
         Settings {
             symbols: proto
                 .symbols

@@ -3,8 +3,6 @@ mod broker_client;
 mod config_reloader;
 mod data_buffer;
 mod db;
-#[cfg(test)]
-// mod db_test; // Disabled - requires alpaca_api_client
 mod grpc_server;
 mod indicator_client;
 mod indicator_server;
@@ -16,6 +14,8 @@ mod signal_analyzer;
 mod streamer;
 mod trading_strategy;
 
+// #[cfg(test)]
+// mod db_test; // Disabled - requires alpaca_api_client
 use crate::aggregator::Aggregator;
 use crate::config_reloader::ConfigReloader;
 use crate::data_buffer::DataBuffer;

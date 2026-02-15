@@ -3,7 +3,7 @@ use anyhow::Result;
 use sqlx::MySqlPool;
 
 pub struct Database {
-    pool: MySqlPool,
+    pub(crate) pool: MySqlPool,
 }
 
 impl Database {
@@ -296,6 +296,6 @@ mod tests {
         assert_eq!(test_bar.5, 1000);
 
         // 5. Cleanup
-        db.drop_tables().await.expect("Failed to drop tables");
+        //db.drop_tables().await.expect("Failed to drop tables");
     }
 }

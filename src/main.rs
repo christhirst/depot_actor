@@ -1,4 +1,6 @@
 mod db;
+#[cfg(test)]
+mod db_test;
 mod settings;
 mod streamer;
 

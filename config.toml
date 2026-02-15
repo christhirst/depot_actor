@@ -1,5 +1,5 @@
-trade_symbols = ["AAPL"]
-bar_symbols = ["AAPL"]
+trade_symbols = ["FAKEPACA"]
+bar_symbols = ["FAKEPACA"]
 
 [database]
 host = "mariadb-koqv.sliplane.app"

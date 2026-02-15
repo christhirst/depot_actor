@@ -1,0 +1,24 @@
+GRPC localhost:50051
+{
+  "symbols": [
+    {
+      "name": "AAPL",
+      "subscribe_trades": true,
+      "subscribe_bars": true,
+      "aggregation_interval_hours": 24
+    },
+    {
+      "name": "GOOGL",
+      "subscribe_trades": false,
+      "subscribe_bars": true,
+      "aggregation_interval_hours": 1
+    }
+  ],
+  "database": {
+    "host": "localhost",
+    "port": 3306,
+    "user": "dbuser",
+    "password": "mypassword",
+    "database": "mydb"
+  }
+}' config.ConfigService/UpdateConfig

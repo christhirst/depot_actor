@@ -16,3 +16,10 @@ sqlx = { version = "0.8", features = ["runtime-tokio", "mysql", "macros"] }
 tokio = { version = "1", features = ["full"] }
 anyhow = "1.0"
 serde = { version = "1.0.228", features = ["derive"] }
+
+# gRPC dependencies
+tonic = "0.14.3"
+prost = "0.14.3"
+
+[build-dependencies]
+tonic-build = "0.14.3"

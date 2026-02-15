@@ -12,9 +12,9 @@ impl Streamer {
         Self { db }
     }
 
-    pub fn start(&self, trade_symbols: Vec<String>, bar_symbols: Vec<String>) {
-        let trade_refs: Vec<&str> = trade_symbols.iter().map(|s| s.as_str()).collect();
-        let bar_refs: Vec<&str> = bar_symbols.iter().map(|s| s.as_str()).collect();
+    pub fn start(&self, trade_symbols: Vec<&str>, bar_symbols: Vec<&str>) {
+        let trade_refs: Vec<&str> = trade_symbols.iter().copied().collect();
+        let bar_refs: Vec<&str> = bar_symbols.iter().copied().collect();
 
         let db = self.db.clone();
         let rt = Handle::current();

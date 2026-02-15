@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+package config;
+
+service ConfigService {
+  rpc ReloadConfig (ReloadConfigRequest) returns (ReloadConfigResponse);
+  rpc UpdateConfig (UpdateConfigRequest) returns (UpdateConfigResponse);
+}
+
+message ReloadConfigRequest {}
+
+message ReloadConfigResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message SymbolConfig {
+  string name = 1;
+  bool subscribe_trades = 2;
+  bool subscribe_bars = 3;
+  uint32 aggregation_interval_hours = 4;
+}
+
+message DatabaseConfig {
+  string host = 1;
+  uint32 port = 2;
+  string user = 3;
+  string password = 4;
+  string database = 5;
+  optional string userroot = 6;
+  optional string rootpassword = 7;
+}
+
+message UpdateConfigRequest {
+  repeated SymbolConfig symbols = 1;
+  DatabaseConfig database = 2;
+}
+
+message UpdateConfigResponse {
+  bool success = 1;
+  string message = 2;
+}

@@ -1,5 +1,8 @@
-trade_symbols = ["FAKEPACA"]
-bar_symbols = ["FAKEPACA"]
+[[symbols]]
+name = "FAKEPACA"
+subscribe_trades = true
+subscribe_bars = true
+aggregation_interval_hours = 24
 
 [database]
 host = "mariadb-koqv.sliplane.app"

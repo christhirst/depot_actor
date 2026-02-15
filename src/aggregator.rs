@@ -1,0 +1,59 @@
+use crate::db::Database;
+use crate::settings::SymbolConfig;
+use std::sync::Arc;
+use tokio::time::{interval, Duration};
+
+pub struct Aggregator {
+    db: Arc<Database>,
+    symbols: Vec<SymbolConfig>,
+}
+
+impl Aggregator {
+    pub fn new(db: Arc<Database>, symbols: Vec<SymbolConfig>) -> Self {
+        Self { db, symbols }
+    }
+
+    pub fn start(self) {
+        // Spawn a task for each symbol with its own interval
+        for symbol_config in self.symbols {
+            let db = self.db.clone();
+            let symbol = symbol_config.name.clone();
+            let interval_hours = symbol_config.aggregation_interval_hours;
+
+            tokio::spawn(async move {
+                let mut ticker = interval(Duration::from_secs((interval_hours as u64) * 3600));
+
+                loop {
+                    ticker.tick().await;
+
+                    println!(
+                        "[AGGREGATOR] Running aggregation for {} (interval: {}h)",
+                        symbol, interval_hours
+                    );
+
+                    // Aggregate trades
+                    if let Err(e) = db.aggregate_trades(&symbol, interval_hours).await {
+                        eprintln!(
+                            "[AGGREGATOR] Error aggregating trades for {}: {:?}",
+                            symbol, e
+                        );
+                    } else {
+                        println!("[AGGREGATOR] Successfully aggregated trades for {}", symbol);
+                    }
+
+                    // Aggregate bars
+                    if let Err(e) = db.aggregate_bars(&symbol, interval_hours).await {
+                        eprintln!(
+                            "[AGGREGATOR] Error aggregating bars for {}: {:?}",
+                            symbol, e
+                        );
+                    } else {
+                        println!("[AGGREGATOR] Successfully aggregated bars for {}", symbol);
+                    }
+                }
+            });
+        }
+
+        println!("[AGGREGATOR] Started aggregation tasks for all symbols");
+    }
+}

@@ -116,6 +116,39 @@ impl Database {
         .execute(&pool)
         .await?;
 
+        // Create aggregated data tables
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS aggregated_trades (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                symbol VARCHAR(16),
+                date DATE,
+                avg_price DECIMAL(16, 4),
+                total_volume BIGINT,
+                trade_count INT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_symbol_date (symbol, date)
+            )",
+        )
+        .execute(&pool)
+        .await?;
+
+        sqlx::query(
+            "CREATE TABLE IF NOT EXISTS aggregated_bars (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                symbol VARCHAR(16),
+                date DATE,
+                open DECIMAL(16, 4),
+                high DECIMAL(16, 4),
+                low DECIMAL(16, 4),
+                close DECIMAL(16, 4),
+                volume BIGINT,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE KEY unique_symbol_date (symbol, date)
+            )",
+        )
+        .execute(&pool)
+        .await?;
+
         Ok(Self { pool })
     }
 
@@ -172,6 +205,82 @@ impl Database {
         sqlx::query("DROP TABLE IF EXISTS bars")
             .execute(&self.pool)
             .await?;
+        sqlx::query("DROP TABLE IF EXISTS aggregated_trades")
+            .execute(&self.pool)
+            .await?;
+        sqlx::query("DROP TABLE IF EXISTS aggregated_bars")
+            .execute(&self.pool)
+            .await?;
+        Ok(())
+    }
+
+    /// Aggregate trades for a symbol over the specified interval
+    pub async fn aggregate_trades(&self, symbol: &str, interval_hours: u32) -> Result<()> {
+        let query = format!(
+            "INSERT INTO aggregated_trades (symbol, date, avg_price, total_volume, trade_count)
+             SELECT 
+                 symbol,
+                 DATE(timestamp) as date,
+                 AVG(price) as avg_price,
+                 SUM(size) as total_volume,
+                 COUNT(*) as trade_count
+             FROM trades
+             WHERE symbol = ?
+                 AND timestamp >= DATE_SUB(NOW(), INTERVAL {} HOUR)
+                 AND DATE(timestamp) NOT IN (
+                     SELECT date FROM aggregated_trades WHERE symbol = ?
+                 )
+             GROUP BY symbol, DATE(timestamp)
+             ON DUPLICATE KEY UPDATE
+                 avg_price = VALUES(avg_price),
+                 total_volume = VALUES(total_volume),
+                 trade_count = VALUES(trade_count)",
+            interval_hours
+        );
+
+        sqlx::query(&query)
+            .bind(symbol)
+            .bind(symbol)
+            .execute(&self.pool)
+            .await?;
+
+        Ok(())
+    }
+
+    /// Aggregate bars for a symbol over the specified interval
+    pub async fn aggregate_bars(&self, symbol: &str, interval_hours: u32) -> Result<()> {
+        let query = format!(
+            "INSERT INTO aggregated_bars (symbol, date, open, high, low, close, volume)
+             SELECT 
+                 symbol,
+                 DATE(timestamp) as date,
+                 SUBSTRING_INDEX(GROUP_CONCAT(open ORDER BY timestamp ASC), ',', 1) as open,
+                 MAX(high) as high,
+                 MIN(low) as low,
+                 SUBSTRING_INDEX(GROUP_CONCAT(close ORDER BY timestamp DESC), ',', 1) as close,
+                 SUM(volume) as volume
+             FROM bars
+             WHERE symbol = ?
+                 AND timestamp >= DATE_SUB(NOW(), INTERVAL {} HOUR)
+                 AND DATE(timestamp) NOT IN (
+                     SELECT date FROM aggregated_bars WHERE symbol = ?
+                 )
+             GROUP BY symbol, DATE(timestamp)
+             ON DUPLICATE KEY UPDATE
+                 open = VALUES(open),
+                 high = VALUES(high),
+                 low = VALUES(low),
+                 close = VALUES(close),
+                 volume = VALUES(volume)",
+            interval_hours
+        );
+
+        sqlx::query(&query)
+            .bind(symbol)
+            .bind(symbol)
+            .execute(&self.pool)
+            .await?;
+
         Ok(())
     }
 }

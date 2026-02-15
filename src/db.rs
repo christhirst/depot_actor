@@ -1,4 +1,4 @@
-use alpaca_api_client::MarketDataMessage;
+// use alpaca_api_client::MarketDataMessage;
 use anyhow::Result;
 use sqlx::MySqlPool;
 
@@ -152,6 +152,7 @@ impl Database {
         Ok(Self { pool })
     }
 
+    /* Commented out - requires alpaca_api_client for streaming
     pub async fn save_message(&self, msg: MarketDataMessage) -> Result<()> {
         match msg {
             MarketDataMessage::Trade(t) => {
@@ -177,6 +178,7 @@ impl Database {
         }
         Ok(())
     }
+    */
 
     pub async fn get_trades(&self, symbol: &str) -> Result<Vec<(String, f64, i32)>> {
         let trades = sqlx::query_as::<_, (String, f64, i32)>(

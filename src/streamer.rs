@@ -1,33 +1,43 @@
+use crate::data_buffer::DataBuffer;
 use crate::db::Database;
-use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
+// use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
 use std::sync::Arc;
 use tokio::runtime::Handle;
+use tracing::{error, info};
 
 pub struct Streamer {
     db: Arc<Database>,
+    data_buffer: Arc<DataBuffer>,
 }
 
 impl Streamer {
-    pub fn new(db: Arc<Database>) -> Self {
-        Self { db }
+    pub fn new(db: Arc<Database>, data_buffer: Arc<DataBuffer>) -> Self {
+        Self { db, data_buffer }
     }
 
+    /* Commented out - requires alpaca_api_client for streaming
     pub fn start(&self, trade_symbols: Vec<&str>, bar_symbols: Vec<&str>) {
         let trade_refs: Vec<&str> = trade_symbols.iter().copied().collect();
         let bar_refs: Vec<&str> = bar_symbols.iter().copied().collect();
 
         let db = self.db.clone();
+        let data_buffer = self.data_buffer.clone();
         let rt = Handle::current();
 
         StockStream::new(Feed::Test)
             .subscribe_trades(trade_refs)
             .subscribe_bars(bar_refs)
             .start(move |msg| {
+                // Extract price and add to buffer
                 match &msg {
                     MarketDataMessage::Trade(t) => {
-                        println!("[TRADE] {} ${} x{}", t.symbol, t.p, t.s)
+                        info!("[TRADE] {} ${} x{}", t.symbol, t.p, t.s);
+                        data_buffer.add_price(&t.symbol, t.p);
                     }
-                    MarketDataMessage::Bar(b) => println!("[BAR] {} C={}", b.symbol, b.c),
+                    MarketDataMessage::Bar(b) => {
+                        info!("[BAR] {} C={}", b.symbol, b.c);
+                        data_buffer.add_price(&b.symbol, b.c as f64);
+                    }
                     _ => {}
                 }
 
@@ -35,10 +45,11 @@ impl Streamer {
                 let db_clone = db.clone();
                 rt.spawn(async move {
                     if let Err(e) = db_clone.save_message(msg).await {
-                        eprintln!("Error saving message to DB: {:?}", e);
+                        error!("Error saving message to DB: {:?}", e);
                     }
                 });
             })
             .unwrap();
     }
+    */
 }

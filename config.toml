@@ -3,6 +3,7 @@ name = "FAKEPACA"
 subscribe_trades = true
 subscribe_bars = true
 aggregation_interval_hours = 24
+buffer_size = 200
 
 [database]
 host = "mariadb-koqv.sliplane.app"
@@ -10,3 +11,49 @@ port = 3306
 userroot = "root"
 user = "dbuser"
 database = "db"
+
+# Logging configuration
+log_level = "warn"  # Options: trace, debug, info, warn, error
+
+# Trading configuration (optional)
+[trading]
+enabled = true
+evaluation_interval_seconds = 60
+max_position_size_pct = 0.10  # Max 10% of portfolio per long position
+max_total_exposure_pct = 0.80  # Max 80% of cash can be invested in longs
+max_short_position_pct = 0.05  # Max 5% of portfolio per short position
+max_short_exposure_pct = 0.50  # Max 50% of portfolio in short positions
+buy_threshold = 0.6  # 60% weighted buy signals needed
+sell_threshold = 0.6  # 60% weighted sell signals needed
+
+[trading.broker]
+broker_type = "depot"  # "depot" or "alpaca"
+depot_url = "http://localhost:50053"
+# For Alpaca:
+# broker_type = "alpaca"
+# alpaca_api_key = "your_api_key"
+# alpaca_api_secret = "your_api_secret"
+# alpaca_paper = true
+
+# Trading strategies with weights
+[[trading.strategies]]
+strategy_type = "ma_cross"
+weight = 0.4
+[trading.strategies.params]
+short_period = 50
+long_period = 200
+
+[[trading.strategies]]
+strategy_type = "rsi"
+weight = 0.3
+[trading.strategies.params]
+period = 14
+oversold = 30
+overbought = 70
+
+[[trading.strategies]]
+strategy_type = "bb"
+weight = 0.3
+[trading.strategies.params]
+period = 20
+multiplier = 2.0

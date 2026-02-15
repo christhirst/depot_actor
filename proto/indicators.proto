@@ -1,0 +1,53 @@
+
+syntax = "proto3";
+
+package calculate;
+
+
+service Indicator {
+    rpc ConfReload(UserRequest) returns (ConfigResponse);
+    //rpc GenList(ListNumbersRequest) returns (ListNumbersResponse);
+    rpc GenListe(ListNumbersRequest2) returns (ListNumbersResponse);
+  }
+
+  enum IndicatorType
+  { 
+    BollingerBands =0;
+    ExponentialMovingAverage =1;
+    MaxDrawdown =2;
+    MaxDrawup =3;
+    Maximum =4;
+    MeanAbsoluteDeviation =5;
+    Minimum =6;
+    RateOfChange =7;
+    RelativeStrengthIndex =8;
+    SimpleMovingAverage =9;
+    StandardDeviation =10;
+  }
+
+/* 
+  message Task {
+    string id = 1;
+    repeated double list = 2;
+  } 
+    pub period: Option<i64>,
+    pub multiplier: Option<f64>,
+  
+  */
+
+  message UserRequest {  }
+  //message ListNumbersRequest  { repeated double list = 2 ; }
+  message ListNumbersRequest2  {
+    IndicatorType id = 1;
+    Opt opt = 2;
+    repeated double list = 3;
+   }
+
+   message Opt {
+     double multiplier = 4 ;
+     int64 period = 5;    
+    }
+
+  message ListResponse { repeated string result = 4 ; }
+  message ListNumbersResponse  { repeated double result = 3 ; }
+  message ConfigResponse { string result = 1; }

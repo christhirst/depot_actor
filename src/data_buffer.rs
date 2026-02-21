@@ -77,7 +77,6 @@ impl DataBuffer {
             .unwrap_or_default()
     }
 
-    /// Get the number of buffered prices for a symbol
     pub fn len(&self, symbol: &str) -> usize {
         let buffers = self.buffers.read().unwrap();
 
@@ -85,6 +84,62 @@ impl DataBuffer {
             .get(symbol)
             .map(|buffer| buffer.prices.len())
             .unwrap_or(0)
+    }
+
+    /// Initialize the data buffer with historical data from the database
+    pub async fn init_from_db(&self, db: &crate::db::Database) -> anyhow::Result<()> {
+        let symbol_names: Vec<String> = {
+            let buffers = self.buffers.read().unwrap();
+            buffers.keys().cloned().collect()
+        };
+
+        for symbol in symbol_names {
+            // First try to get aggregated bars as they are more relevant for indicators
+            match db.get_bars(&symbol).await {
+                Ok(bars) if !bars.is_empty() => {
+                    let mut buffers = self.buffers.write().unwrap();
+                    if let Some(buffer) = buffers.get_mut(&symbol) {
+                        let max_size = buffer.max_size;
+                        // Sort bars by time just in case, but get_bars usually returns them in order
+                        // The tuple format is (symbol, open, high, low, close, volume)
+                        // We take the last max_size elements
+                        let iter = bars.iter().rev().take(max_size).collect::<Vec<_>>();
+                        for bar in iter.into_iter().rev() {
+                            buffer.prices.push_back(bar.4); // close price is 4th index
+                        }
+                        tracing::info!(
+                            "Pre-filled DataBuffer for {} with {} historical bars",
+                            symbol,
+                            buffer.prices.len() // Use the actual number pushed
+                        );
+                    }
+                }
+                _ => {
+                    // Try getting raw trades if no bars exist
+                    match db.get_trades(&symbol).await {
+                        Ok(trades) if !trades.is_empty() => {
+                            let mut buffers = self.buffers.write().unwrap();
+                            if let Some(buffer) = buffers.get_mut(&symbol) {
+                                let max_size = buffer.max_size;
+                                let iter = trades.iter().rev().take(max_size).collect::<Vec<_>>();
+                                for trade in iter.into_iter().rev() {
+                                    buffer.prices.push_back(trade.1); // price is 1st index
+                                }
+                                tracing::info!(
+                                    "Pre-filled DataBuffer for {} with {} historical trades",
+                                    symbol,
+                                    buffer.prices.len() // Use the actual number pushed
+                                );
+                            }
+                        }
+                        _ => {
+                            tracing::warn!("No historical data found for symbol {}", symbol);
+                        }
+                    }
+                }
+            }
+        }
+        Ok(())
     }
 }
 

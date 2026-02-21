@@ -1,5 +1,19 @@
 [[symbols]]
-name = "FAKEPACA"
+name = "AAPL"
+subscribe_trades = true
+subscribe_bars = true
+aggregation_interval_hours = 24
+buffer_size = 200
+
+[[symbols]]
+name = "SPY"
+subscribe_trades = true
+subscribe_bars = true
+aggregation_interval_hours = 24
+buffer_size = 200
+
+[[symbols]]
+name = "QQQ"
 subscribe_trades = true
 subscribe_bars = true
 aggregation_interval_hours = 24
@@ -11,6 +25,7 @@ port = 3306
 userroot = "root"
 user = "dbuser"
 database = "db"
+password = "OTSvEJG3FYyIcaQd"
 
 # Logging configuration
 log_level = "warn"  # Options: trace, debug, info, warn, error
@@ -28,7 +43,7 @@ sell_threshold = 0.6  # 60% weighted sell signals needed
 
 [trading.broker]
 broker_type = "depot"  # "depot" or "alpaca"
-depot_url = "http://localhost:50053"
+depot_url = "http://raynkami-balance-server.sliplane.app:50051"
 # For Alpaca:
 # broker_type = "alpaca"
 # alpaca_api_key = "your_api_key"

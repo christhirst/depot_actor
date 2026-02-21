@@ -5,6 +5,8 @@ package config;
 service ConfigService {
   rpc ReloadConfig (ReloadConfigRequest) returns (ReloadConfigResponse);
   rpc UpdateConfig (UpdateConfigRequest) returns (UpdateConfigResponse);
+  rpc AddSymbol (AddSymbolRequest) returns (AddSymbolResponse);
+  rpc RemoveSymbol (RemoveSymbolRequest) returns (RemoveSymbolResponse);
 }
 
 message ReloadConfigRequest {}
@@ -37,6 +39,24 @@ message UpdateConfigRequest {
 }
 
 message UpdateConfigResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message AddSymbolRequest {
+  SymbolConfig symbol = 1;
+}
+
+message AddSymbolResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message RemoveSymbolRequest {
+  string name = 1;
+}
+
+message RemoveSymbolResponse {
   bool success = 1;
   string message = 2;
 }

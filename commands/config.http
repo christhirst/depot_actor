@@ -1,24 +1,45 @@
-GRPC localhost:50051
+proto < ../proto/config.proto
+
+
+
+### UpdateConfig
+GRPC localhost:50051/ConfigService/UpdateConfig
 {
   "symbols": [
     {
-      "name": "AAPL",
+      "name": "FAKEPACA",
       "subscribe_trades": true,
       "subscribe_bars": true,
       "aggregation_interval_hours": 24
-    },
-    {
-      "name": "GOOGL",
-      "subscribe_trades": false,
-      "subscribe_bars": true,
-      "aggregation_interval_hours": 1
     }
   ],
   "database": {
-    "host": "localhost",
+    "host": "mariadb-koqv.sliplane.app",
     "port": 3306,
-    "user": "dbuser",
-    "password": "mypassword",
-    "database": "mydb"
+    "user": "root",
+    "password": "OTSvEJG3FYyIcaQd",
+    "database": "trades"
   }
-}' config.ConfigService/UpdateConfig
+}
+
+
+### ReloadConfig
+GRPC localhost:50051/ConfigService/ReloadConfig
+{}
+
+### AddSymbol
+GRPC localhost:50051/ConfigService/AddSymbol
+{
+  "symbol": {
+    "name": "AAPL",
+    "subscribe_trades": true,
+    "subscribe_bars": true,
+    "aggregation_interval_hours": 24
+  }
+}
+
+### RemoveSymbol
+GRPC localhost:50051/ConfigService/RemoveSymbol
+{
+  "name": "QQQ"
+}

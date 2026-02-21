@@ -2,8 +2,6 @@ use crate::data_buffer::DataBuffer;
 use crate::db::Database;
 // use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
 use std::sync::Arc;
-use tokio::runtime::Handle;
-use tracing::{error, info};
 
 pub struct Streamer {
     db: Arc<Database>,

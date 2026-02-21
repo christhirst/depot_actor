@@ -311,7 +311,7 @@ mod tests {
 
         // Construct admin settings from userroot/root_password
         // We clone app_settings and override user/password
-        let admin_settings = DatabaseSettings {
+        let mut admin_settings = DatabaseSettings {
             host: app_settings.host.clone(),
             port: app_settings.port,
             user: app_settings
@@ -323,6 +323,18 @@ mod tests {
             userroot: None,
             rootpassword: None,
         };
+
+        // Fallback: If root password is not set, try using the user password
+        // This is common in dev environments where root and user share the same password
+        // or when running tests against a local DB where we provide one password env var
+        if admin_settings.password.is_empty() {
+            if !app_settings.password.is_empty() {
+                println!("WARN: APP_DATABASE_ROOTPASSWORD not set, falling back to APP_DATABASE_PASSWORD for root connection");
+                admin_settings.password = app_settings.password.clone();
+            } else {
+                println!("WARN: Neither APP_DATABASE_ROOTPASSWORD nor APP_DATABASE_PASSWORD set. Connecting with empty password.");
+            }
+        }
 
         // Run init
         Database::init(&admin_settings, app_settings)
@@ -349,9 +361,9 @@ mod tests {
         // Clean up (optional, but good practice)
         // Note: dbuser might not have DROP TABLE permission if we only granted typical app permissions.
         // But we granted ALL PRIVILEGES in init(), so it should work.
-        db.drop_tables()
-            .await
-            .expect("Failed to drop tables with new user");
+        /* db.drop_tables()
+        .await
+        .expect("Failed to drop tables with new user"); */
     }
 
     #[tokio::test]

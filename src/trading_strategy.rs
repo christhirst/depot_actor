@@ -358,7 +358,11 @@ impl TradingService {
                                     self.notifier.notify(&message);
                                 }
                                 Err(e) => {
-                                    tracing::error!("[EXECUTE] Short failed for {}: {:?}", symbol, e);
+                                    tracing::error!(
+                                        "[EXECUTE] Short failed for {}: {:?}",
+                                        symbol,
+                                        e
+                                    );
                                 }
                             }
                         } else {

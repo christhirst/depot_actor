@@ -13,14 +13,16 @@ impl Aggregator {
         Self { db, symbols }
     }
 
-    pub fn start(self) {
+    pub fn start(self) -> Vec<tokio::task::JoinHandle<()>> {
+        let mut handles = Vec::new();
+
         // Spawn a task for each symbol with its own interval
         for symbol_config in self.symbols {
             let db = self.db.clone();
             let symbol = symbol_config.name.clone();
-            let interval_hours = symbol_config.aggregation_interval_hours;
+            let interval_hours = std::cmp::max(1, symbol_config.aggregation_interval_hours);
 
-            tokio::spawn(async move {
+            handles.push(tokio::spawn(async move {
                 let mut ticker = interval(Duration::from_secs((interval_hours as u64) * 3600));
 
                 loop {
@@ -51,9 +53,10 @@ impl Aggregator {
                         println!("[AGGREGATOR] Successfully aggregated bars for {}", symbol);
                     }
                 }
-            });
+            }));
         }
 
         println!("[AGGREGATOR] Started aggregation tasks for all symbols");
+        handles
     }
 }

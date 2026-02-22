@@ -1,6 +1,6 @@
 use crate::data_buffer::DataBuffer;
 use crate::indicator_client::IndicatorClient;
-use crate::signal_analyzer::{Signal, SignalAnalyzer};
+use crate::trader::signal_analyzer::{Signal, SignalAnalyzer};
 use anyhow::Result;
 use async_trait::async_trait;
 use std::sync::Arc;
@@ -166,18 +166,18 @@ pub struct TradingService {
     data_buffer: Arc<DataBuffer>,
     indicator_client: IndicatorClient,
     strategies: Vec<(Box<dyn TradingStrategy>, f64)>, // (strategy, weight)
-    signal_aggregator: crate::signal_aggregator::SignalAggregator,
-    position_manager: crate::position_manager::PositionManager,
-    notifier: Arc<dyn crate::notification::Notifier>,
+    signal_aggregator: crate::trader::signal_aggregator::SignalAggregator,
+    position_manager: crate::trader::position_manager::PositionManager,
+    notifier: Arc<dyn crate::trader::notification::Notifier>,
 }
 
 impl TradingService {
     pub fn new(
         data_buffer: Arc<DataBuffer>,
         indicator_client: IndicatorClient,
-        signal_aggregator: crate::signal_aggregator::SignalAggregator,
-        position_manager: crate::position_manager::PositionManager,
-        notifier: Arc<dyn crate::notification::Notifier>,
+        signal_aggregator: crate::trader::signal_aggregator::SignalAggregator,
+        position_manager: crate::trader::position_manager::PositionManager,
+        notifier: Arc<dyn crate::trader::notification::Notifier>,
     ) -> Self {
         Self {
             data_buffer,
@@ -213,7 +213,7 @@ impl TradingService {
                             weight
                         );
                     }
-                    weighted_signals.push(crate::signal_aggregator::WeightedSignal {
+                    weighted_signals.push(crate::trader::signal_aggregator::WeightedSignal {
                         strategy_name: strategy.name().to_string(),
                         signal,
                         weight: *weight,
@@ -247,7 +247,7 @@ impl TradingService {
 
         // 3. Execute based on aggregated signal and current position
         match aggregated {
-            crate::signal_aggregator::AggregatedSignal::Buy { strength } => {
+            crate::trader::signal_aggregator::AggregatedSignal::Buy { strength } => {
                 tracing::info!(
                     "[AGGREGATED] {} - BUY signal (strength: {:.2})",
                     symbol,
@@ -255,7 +255,7 @@ impl TradingService {
                 );
 
                 match position {
-                    Some((quantity, crate::broker_client::PositionType::Short)) => {
+                    Some((quantity, crate::trader::broker_client::PositionType::Short)) => {
                         // Cover short position
                         match self
                             .position_manager
@@ -274,7 +274,7 @@ impl TradingService {
                             }
                         }
                     }
-                    Some((_, crate::broker_client::PositionType::Long)) => {
+                    Some((_, crate::trader::broker_client::PositionType::Long)) => {
                         tracing::debug!("[EXECUTE] Already long {}, holding", symbol);
                     }
                     None => {
@@ -307,7 +307,7 @@ impl TradingService {
                     }
                 }
             }
-            crate::signal_aggregator::AggregatedSignal::Sell { strength } => {
+            crate::trader::signal_aggregator::AggregatedSignal::Sell { strength } => {
                 tracing::info!(
                     "[AGGREGATED] {} - SELL signal (strength: {:.2})",
                     symbol,
@@ -315,7 +315,7 @@ impl TradingService {
                 );
 
                 match position {
-                    Some((quantity, crate::broker_client::PositionType::Long)) => {
+                    Some((quantity, crate::trader::broker_client::PositionType::Long)) => {
                         // Close long position
                         match self
                             .position_manager
@@ -334,7 +334,7 @@ impl TradingService {
                             }
                         }
                     }
-                    Some((_, crate::broker_client::PositionType::Short)) => {
+                    Some((_, crate::trader::broker_client::PositionType::Short)) => {
                         tracing::debug!("[EXECUTE] Already short {}, holding", symbol);
                     }
                     None => {
@@ -371,7 +371,7 @@ impl TradingService {
                     }
                 }
             }
-            crate::signal_aggregator::AggregatedSignal::Hold => {
+            crate::trader::signal_aggregator::AggregatedSignal::Hold => {
                 tracing::debug!("[AGGREGATED] {} - HOLD signal", symbol);
             }
         }

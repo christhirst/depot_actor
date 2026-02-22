@@ -1,32 +1,25 @@
 mod aggregator;
-mod broker_client;
-mod config_reloader;
 mod data_buffer;
 mod db;
 mod grpc_server;
 mod indicator_client;
 mod indicator_server;
-mod notification;
-mod position_manager;
 mod settings;
-mod signal_aggregator;
-mod signal_analyzer;
-mod streamer;
-mod trading_strategy;
+mod trader;
 
 use tracing::info;
 
 // #[cfg(test)]
 // mod db_test; // Disabled - requires alpaca_api_client
 use crate::aggregator::Aggregator;
-use crate::config_reloader::{start_config_server, ConfigGrpcService};
 use crate::data_buffer::DataBuffer;
 use crate::db::Database;
 use crate::indicator_client::IndicatorClient;
 use crate::indicator_server::start_indicator_server;
 use crate::settings::Settings;
-use crate::streamer::Streamer;
-use crate::trading_strategy::{
+use crate::trader::config_reloader::{start_config_server, ConfigGrpcService};
+use crate::trader::streamer::Streamer;
+use crate::trader::trading_strategy::{
     BollingerBandsStrategy, MovingAverageCrossStrategy, RsiStrategy, TradingService,
 };
 
@@ -41,23 +34,21 @@ async fn main() -> anyhow::Result<()> {
     let initial_settings = Settings::load()?;
     let settings = Arc::new(tokio::sync::RwLock::new(initial_settings));
 
-    let (reload_tx, mut reload_rx) = tokio::sync::broadcast::channel::<()>(16);
-
-    // Create config service
-    let config_service = ConfigGrpcService::new(settings.clone(), reload_tx.clone());
-
-    info!("Config service created");
-
     // Initialize tracing with configured log level
     let log_level = settings
         .read()
         .await
         .log_level
         .parse::<tracing::Level>()
-        .unwrap_or(tracing::Level::WARN);
-
+        .unwrap_or(tracing::Level::INFO);
+    println!("{log_level}");
     tracing_subscriber::fmt().with_max_level(log_level).init();
+    info!("Config service created");
 
+    //Reload channel
+    let (reload_tx, mut reload_rx) = tokio::sync::broadcast::channel::<()>(16);
+    // Create config service
+    let config_service = ConfigGrpcService::new(settings.clone(), reload_tx.clone());
     // Start config gRPC server immediately (outside the restart loop)
     let config_grpc_port = std::env::var("CONFIG_GRPC_PORT")
         .ok()
@@ -129,11 +120,42 @@ async fn main() -> anyhow::Result<()> {
         // Give servers a moment to start
         tokio::time::sleep(Duration::from_millis(100)).await;
 
-        let _streamer = Streamer::new(database.clone(), data_buffer.clone());
+        let trading_config = {
+            let s = settings.read().await;
+            s.trading.clone()
+        };
+
+        if let Some(ref config) = trading_config {
+            if let Some(key) = &config.broker.alpaca_api_key {
+                std::env::set_var("APCA_API_KEY_ID", key);
+            }
+            if let Some(secret) = &config.broker.alpaca_api_secret {
+                std::env::set_var("APCA_API_SECRET_KEY", secret);
+            }
+        }
+
+        let streamer = Streamer::new(database.clone(), data_buffer.clone());
 
         info!("Starting stock stream...");
-        // Streaming disabled - requires alpaca_api_client
-        // streamer.start(settings.trade_symbols(), settings.bar_symbols());
+        let trade_symbols = {
+            let s = settings.read().await;
+            s.trade_symbols()
+                .into_iter()
+                .map(String::from)
+                .collect::<Vec<_>>()
+        };
+        let bar_symbols = {
+            let s = settings.read().await;
+            s.bar_symbols()
+                .into_iter()
+                .map(String::from)
+                .collect::<Vec<_>>()
+        };
+        tokio::task::spawn_blocking(move || {
+            let t_refs: Vec<&str> = trade_symbols.iter().map(|s| s.as_str()).collect();
+            let b_refs: Vec<&str> = bar_symbols.iter().map(|s| s.as_str()).collect();
+            streamer.start(t_refs, b_refs);
+        });
 
         // Start aggregator
         let aggregator = Aggregator::new(database, symbols.clone());
@@ -156,10 +178,9 @@ async fn main() -> anyhow::Result<()> {
                         Some(depot_url) => {
                             println!("[TRADING] Connecting to Depot at {}...", depot_url);
                             tracing::info!("[TRADING] Connecting to Depot at {}...", depot_url);
-                            match broker_client::DepotClient::connect(depot_url).await {
-                                Ok(client) => {
-                                    Some(Arc::new(client) as Arc<dyn broker_client::BrokerClient>)
-                                }
+                            match trader::broker_client::DepotClient::connect(depot_url).await {
+                                Ok(client) => Some(Arc::new(client)
+                                    as Arc<dyn trader::broker_client::BrokerClient>),
                                 Err(e) => {
                                     tracing::error!(
                                         "[TRADING] Failed to connect to Depot at {}: {:?}",
@@ -194,12 +215,12 @@ async fn main() -> anyhow::Result<()> {
                                     "[TRADING] Connecting to Alpaca (paper: {})...",
                                     trading_config.broker.alpaca_paper
                                 );
-                                Some(Arc::new(broker_client::AlpacaClient::new(
+                                Some(Arc::new(trader::broker_client::AlpacaClient::new(
                                     api_key.clone(),
                                     api_secret.clone(),
                                     trading_config.broker.alpaca_paper,
                                 ))
-                                    as Arc<dyn broker_client::BrokerClient>)
+                                    as Arc<dyn trader::broker_client::BrokerClient>)
                             }
                             _ => {
                                 tracing::error!(
@@ -219,7 +240,7 @@ async fn main() -> anyhow::Result<()> {
                 };
                 if let Some(broker) = broker {
                     // Create position manager
-                    let position_manager = position_manager::PositionManager::new(
+                    let position_manager = trader::position_manager::PositionManager::new(
                         broker.clone(),
                         trading_config.max_position_size_pct,
                         trading_config.max_total_exposure_pct,
@@ -228,14 +249,14 @@ async fn main() -> anyhow::Result<()> {
                     );
 
                     // Create signal aggregator
-                    let signal_aggregator = signal_aggregator::SignalAggregator::new(
+                    let signal_aggregator = trader::signal_aggregator::SignalAggregator::new(
                         trading_config.buy_threshold,
                         trading_config.sell_threshold,
                     );
 
                     // Create notifier
-                    let notifier: Arc<dyn notification::Notifier> =
-                        Arc::new(notification::LogNotifier);
+                    let notifier: Arc<dyn trader::notification::Notifier> =
+                        Arc::new(trader::notification::LogNotifier);
 
                     // Connect to indicator service
                     println!("[TRADING] Connecting to indicator service...");

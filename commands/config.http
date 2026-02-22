@@ -43,3 +43,24 @@ GRPC localhost:50051/ConfigService/RemoveSymbol
 {
   "name": "QQQ"
 }
+
+
+
+
+###
+# @keepStreaming
+WS wss://stream.data.alpaca.markets/v2/test
+APCA-API-KEY-ID: 
+APCA-API-SECRET-KEY: 
+
+{{@streaming
+  async function writeStream(){
+    await sleep(10000);
+    $requestClient.send({
+      "event": "ping",
+      "reqid": 45
+    });
+    await sleep(1000);
+  }
+  exports.waitPromise = writeStream();
+}}

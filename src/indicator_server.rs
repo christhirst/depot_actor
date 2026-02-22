@@ -81,7 +81,7 @@ impl Indicator for IndicatorGrpcService {
 
 /// Calculate Simple Moving Average
 fn calculate_sma(data: &[f64], period: usize) -> Vec<f64> {
-    if data.len() < period {
+    if period == 0 || data.len() < period {
         return vec![];
     }
 
@@ -115,7 +115,7 @@ fn calculate_ema(data: &[f64], period: usize) -> Vec<f64> {
 
 /// Calculate Relative Strength Index
 fn calculate_rsi(data: &[f64], period: usize) -> Vec<f64> {
-    if data.len() < period + 1 {
+    if period == 0 || data.len() < period + 1 {
         return vec![];
     }
 
@@ -138,8 +138,8 @@ fn calculate_rsi(data: &[f64], period: usize) -> Vec<f64> {
 
     // Calculate RSI for each window
     for i in period - 1..gains.len() {
-        let avg_gain: f64 = gains[i - period + 1..=i].iter().sum::<f64>() / period as f64;
-        let avg_loss: f64 = losses[i - period + 1..=i].iter().sum::<f64>() / period as f64;
+        let avg_gain: f64 = gains[i + 1 - period..=i].iter().sum::<f64>() / period as f64;
+        let avg_loss: f64 = losses[i + 1 - period..=i].iter().sum::<f64>() / period as f64;
 
         let rs = if avg_loss == 0.0 {
             100.0
@@ -156,7 +156,7 @@ fn calculate_rsi(data: &[f64], period: usize) -> Vec<f64> {
 
 /// Calculate Bollinger Bands (returns middle, upper, lower interleaved)
 fn calculate_bollinger_bands(data: &[f64], period: usize, multiplier: f64) -> Vec<f64> {
-    if data.len() < period {
+    if period == 0 || data.len() < period {
         return vec![];
     }
 

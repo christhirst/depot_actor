@@ -1,3 +1,6 @@
+# Logging configuration
+log_level = "info"  # Options: trace, debug, info, warn, error
+
 [[symbols]]
 name = "AAPL"
 subscribe_trades = true
@@ -13,7 +16,7 @@ aggregation_interval_hours = 24
 buffer_size = 200
 
 [[symbols]]
-name = "QQQ"
+name = "FAKEPACA"
 subscribe_trades = true
 subscribe_bars = true
 aggregation_interval_hours = 24
@@ -27,8 +30,7 @@ user = "dbuser"
 database = "db"
 password = "OTSvEJG3FYyIcaQd"
 
-# Logging configuration
-log_level = "warn"  # Options: trace, debug, info, warn, error
+
 
 # Trading configuration (optional)
 [trading]
@@ -42,13 +44,13 @@ buy_threshold = 0.6  # 60% weighted buy signals needed
 sell_threshold = 0.6  # 60% weighted sell signals needed
 
 [trading.broker]
-broker_type = "depot"  # "depot" or "alpaca"
-depot_url = "http://raynkami-balance-server.sliplane.app:50051"
-# For Alpaca:
-# broker_type = "alpaca"
-# alpaca_api_key = "your_api_key"
-# alpaca_api_secret = "your_api_secret"
-# alpaca_paper = true
+# broker_type = "depot"  # "depot" or "alpaca"
+# depot_url = "http://raynkami-balance-server.sliplane.app:50051"
+ # For Alpaca:
+ broker_type = "alpaca"
+ alpaca_api_key = "PK9ZEOMKSV0ZN7FEZR6F"
+ alpaca_api_secret = "ACZuRYMZ2GUFCkw0RVCquIF8Og7jTafT5itcAKIS"
+ alpaca_paper = true
 
 # Trading strategies with weights
 [[trading.strategies]]

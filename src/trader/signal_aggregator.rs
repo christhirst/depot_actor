@@ -1,4 +1,4 @@
-use crate::signal_analyzer::Signal;
+use crate::trader::signal_analyzer::Signal;
 
 /// Weighted signal from a strategy
 #[derive(Debug, Clone)]

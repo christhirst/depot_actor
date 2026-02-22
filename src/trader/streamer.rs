@@ -1,7 +1,9 @@
 use crate::data_buffer::DataBuffer;
 use crate::db::Database;
-// use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
+use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
 use std::sync::Arc;
+use tokio::runtime::Handle;
+use tracing::{error, info};
 
 pub struct Streamer {
     db: Arc<Database>,
@@ -13,7 +15,6 @@ impl Streamer {
         Self { db, data_buffer }
     }
 
-    /* Commented out - requires alpaca_api_client for streaming
     pub fn start(&self, trade_symbols: Vec<&str>, bar_symbols: Vec<&str>) {
         let trade_refs: Vec<&str> = trade_symbols.iter().copied().collect();
         let bar_refs: Vec<&str> = bar_symbols.iter().copied().collect();
@@ -22,7 +23,7 @@ impl Streamer {
         let data_buffer = self.data_buffer.clone();
         let rt = Handle::current();
 
-        StockStream::new(Feed::Test)
+        let stream_result = StockStream::new(Feed::Test)
             .subscribe_trades(trade_refs)
             .subscribe_bars(bar_refs)
             .start(move |msg| {
@@ -46,8 +47,13 @@ impl Streamer {
                         error!("Error saving message to DB: {:?}", e);
                     }
                 });
-            })
-            .unwrap();
+            });
+
+        if let Err(e) = stream_result {
+            error!(
+                "Alpaca stream failed to start or connection closed: {:?}",
+                e
+            );
+        }
     }
-    */
 }

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use async_trait::async_trait;
 use tonic::transport::Channel;
+use tracing::info;
 
 /// Position type (long or short)
 #[derive(Debug, Clone, PartialEq)]
@@ -180,11 +181,9 @@ impl BrokerClient for DepotClient {
             anyhow::bail!("Short failed: {}", resp.message);
         }
 
-        tracing::info!(
+        info!(
             "[DEPOT] Short executed: {} shares of {} at ${}",
-            quantity,
-            symbol,
-            price
+            quantity, symbol, price
         );
 
         Ok(Order {
@@ -211,11 +210,9 @@ impl BrokerClient for DepotClient {
             anyhow::bail!("Cover failed: {}", resp.message);
         }
 
-        tracing::info!(
+        info!(
             "[DEPOT] Cover executed: {} shares of {} at ${}",
-            quantity,
-            symbol,
-            price
+            quantity, symbol, price
         );
 
         Ok(Order {
@@ -326,10 +323,9 @@ impl BrokerClient for AlpacaClient {
             .send()
             .await?;
 
-        tracing::info!(
+        info!(
             "[ALPACA] Buy order submitted: {} shares of {}",
-            quantity,
-            symbol
+            quantity, symbol
         );
 
         Ok(Order {
@@ -427,10 +423,9 @@ impl BrokerClient for AlpacaClient {
             .send()
             .await?;
 
-        tracing::info!(
+        info!(
             "[ALPACA] Cover order submitted: {} shares of {}",
-            quantity,
-            symbol
+            quantity, symbol
         );
 
         Ok(Order {

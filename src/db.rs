@@ -1,4 +1,4 @@
-// use alpaca_api_client::MarketDataMessage;
+use alpaca_api_client::MarketDataMessage;
 use anyhow::Result;
 use sqlx::MySqlPool;
 
@@ -152,7 +152,6 @@ impl Database {
         Ok(Self { pool })
     }
 
-    /* Commented out - requires alpaca_api_client for streaming
     pub async fn save_message(&self, msg: MarketDataMessage) -> Result<()> {
         match msg {
             MarketDataMessage::Trade(t) => {
@@ -178,7 +177,6 @@ impl Database {
         }
         Ok(())
     }
-    */
 
     pub async fn get_trades(&self, symbol: &str) -> Result<Vec<(String, f64, i32)>> {
         let trades = sqlx::query_as::<_, (String, f64, i32)>(
@@ -229,9 +227,6 @@ impl Database {
              FROM trades
              WHERE symbol = ?
                  AND timestamp >= DATE_SUB(NOW(), INTERVAL {} HOUR)
-                 AND DATE(timestamp) NOT IN (
-                     SELECT date FROM aggregated_trades WHERE symbol = ?
-                 )
              GROUP BY symbol, DATE(timestamp)
              ON DUPLICATE KEY UPDATE
                  avg_price = VALUES(avg_price),
@@ -240,11 +235,7 @@ impl Database {
             interval_hours
         );
 
-        sqlx::query(&query)
-            .bind(symbol)
-            .bind(symbol)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(&query).bind(symbol).execute(&self.pool).await?;
 
         Ok(())
     }
@@ -264,9 +255,6 @@ impl Database {
              FROM bars
              WHERE symbol = ?
                  AND timestamp >= DATE_SUB(NOW(), INTERVAL {} HOUR)
-                 AND DATE(timestamp) NOT IN (
-                     SELECT date FROM aggregated_bars WHERE symbol = ?
-                 )
              GROUP BY symbol, DATE(timestamp)
              ON DUPLICATE KEY UPDATE
                  open = VALUES(open),
@@ -277,11 +265,7 @@ impl Database {
             interval_hours
         );
 
-        sqlx::query(&query)
-            .bind(symbol)
-            .bind(symbol)
-            .execute(&self.pool)
-            .await?;
+        sqlx::query(&query).bind(symbol).execute(&self.pool).await?;
 
         Ok(())
     }

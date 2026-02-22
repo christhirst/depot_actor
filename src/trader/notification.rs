@@ -11,9 +11,3 @@ impl Notifier for LogNotifier {
         tracing::info!("[NOTIFICATION] {}", message);
     }
 }
-
-// Future implementations:
-// - EmailNotifier
-// - SlackNotifier
-// - DiscordNotifier
-// - TelegramNotifier

@@ -1,4 +1,4 @@
-use crate::broker_client::{BrokerClient, Order};
+use crate::trader::broker_client::{BrokerClient, Order};
 use anyhow::Result;
 use std::sync::Arc;
 
@@ -36,7 +36,7 @@ impl PositionManager {
         // Calculate current long exposure (total value of all long positions)
         let total_exposure: f64 = positions
             .iter()
-            .filter(|p| p.position_type == crate::broker_client::PositionType::Long)
+            .filter(|p| p.position_type == crate::trader::broker_client::PositionType::Long)
             .map(|p| p.quantity * p.current_price)
             .sum();
 
@@ -117,7 +117,7 @@ impl PositionManager {
         // Calculate current short exposure
         let short_exposure: f64 = positions
             .iter()
-            .filter(|p| p.position_type == crate::broker_client::PositionType::Short)
+            .filter(|p| p.position_type == crate::trader::broker_client::PositionType::Short)
             .map(|p| p.quantity * p.current_price)
             .sum();
 
@@ -190,7 +190,7 @@ impl PositionManager {
     pub async fn get_position(
         &self,
         symbol: &str,
-    ) -> Result<Option<(f64, crate::broker_client::PositionType)>> {
+    ) -> Result<Option<(f64, crate::trader::broker_client::PositionType)>> {
         let positions = self.broker.get_positions().await?;
         let position = positions.iter().find(|p| p.symbol == symbol);
         Ok(position.map(|p| (p.quantity, p.position_type.clone())))
@@ -205,7 +205,7 @@ impl PositionManager {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::broker_client::{OrderSide, Position};
+    use crate::trader::broker_client::{OrderSide, Position};
     use async_trait::async_trait;
 
     struct MockBroker {
@@ -287,7 +287,7 @@ mod tests {
                 quantity: 20.0,
                 avg_price: 200.0,
                 current_price: 200.0,
-                position_type: crate::broker_client::PositionType::Long,
+                position_type: crate::trader::broker_client::PositionType::Long,
             }],
         });
 
@@ -315,7 +315,7 @@ mod tests {
                 quantity: 40.0,
                 avg_price: 200.0,
                 current_price: 200.0,
-                position_type: crate::broker_client::PositionType::Long,
+                position_type: crate::trader::broker_client::PositionType::Long,
             }],
         });
 

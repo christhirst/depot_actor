@@ -2,6 +2,7 @@ use crate::db::Database;
 use crate::settings::SymbolConfig;
 use std::sync::Arc;
 use tokio::time::{interval, Duration};
+use tracing::info;
 
 pub struct Aggregator {
     db: Arc<Database>,
@@ -28,35 +29,35 @@ impl Aggregator {
                 loop {
                     ticker.tick().await;
 
-                    println!(
+                    info!(
                         "[AGGREGATOR] Running aggregation for {} (interval: {}h)",
                         symbol, interval_hours
                     );
 
                     // Aggregate trades
                     if let Err(e) = db.aggregate_trades(&symbol, interval_hours).await {
-                        eprintln!(
+                        info!(
                             "[AGGREGATOR] Error aggregating trades for {}: {:?}",
                             symbol, e
                         );
                     } else {
-                        println!("[AGGREGATOR] Successfully aggregated trades for {}", symbol);
+                        info!("[AGGREGATOR] Successfully aggregated trades for {}", symbol);
                     }
 
                     // Aggregate bars
                     if let Err(e) = db.aggregate_bars(&symbol, interval_hours).await {
-                        eprintln!(
+                        info!(
                             "[AGGREGATOR] Error aggregating bars for {}: {:?}",
                             symbol, e
                         );
                     } else {
-                        println!("[AGGREGATOR] Successfully aggregated bars for {}", symbol);
+                        info!("[AGGREGATOR] Successfully aggregated bars for {}", symbol);
                     }
                 }
             }));
         }
 
-        println!("[AGGREGATOR] Started aggregation tasks for all symbols");
+        info!("[AGGREGATOR] Started aggregation tasks for all symbols");
         handles
     }
 }

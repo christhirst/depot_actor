@@ -1,4 +1,4 @@
-use crate::config_reloader::ConfigGrpcService;
+use crate::trader::config_reloader::ConfigGrpcService;
 use tonic::transport::Server;
 
 // Re-export generated proto code so other modules can use it

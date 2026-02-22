@@ -1,4 +1,4 @@
-use crate::data_buffer::DataBuffer;
+use crate::data::data_buffer::DataBuffer;
 use crate::indicator_client::IndicatorClient;
 use crate::trader::signal_analyzer::{Signal, SignalAnalyzer};
 use anyhow::Result;

@@ -1,4 +1,4 @@
-use crate::data_buffer::DataBuffer;
+use crate::data::data_buffer::DataBuffer;
 use std::sync::Arc;
 use tonic::{Request, Response, Status};
 

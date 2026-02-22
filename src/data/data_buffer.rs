@@ -87,7 +87,7 @@ impl DataBuffer {
     }
 
     /// Initialize the data buffer with historical data from the database
-    pub async fn init_from_db(&self, db: &crate::db::Database) -> anyhow::Result<()> {
+    pub async fn init_from_db(&self, db: &crate::data::db::Database) -> anyhow::Result<()> {
         let symbol_names: Vec<String> = {
             let buffers = self.buffers.read().unwrap();
             buffers.keys().cloned().collect()

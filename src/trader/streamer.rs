@@ -1,5 +1,5 @@
-use crate::data_buffer::DataBuffer;
-use crate::db::Database;
+use crate::data::data_buffer::DataBuffer;
+use crate::data::db::Database;
 use alpaca_api_client::{Feed, MarketDataMessage, StockStream};
 use std::sync::Arc;
 use tokio::runtime::Handle;
@@ -15,7 +15,7 @@ impl Streamer {
         Self { db, data_buffer }
     }
 
-    pub fn start(&self, trade_symbols: Vec<&str>, bar_symbols: Vec<&str>) {
+    pub fn start(&self, feed: Feed, trade_symbols: Vec<&str>, bar_symbols: Vec<&str>) {
         let trade_refs: Vec<&str> = trade_symbols.iter().copied().collect();
         let bar_refs: Vec<&str> = bar_symbols.iter().copied().collect();
 
@@ -23,7 +23,7 @@ impl Streamer {
         let data_buffer = self.data_buffer.clone();
         let rt = Handle::current();
 
-        let stream_result = StockStream::new(Feed::Test)
+        let stream_result = StockStream::new(feed)
             .subscribe_trades(trade_refs)
             .subscribe_bars(bar_refs)
             .start(move |msg| {

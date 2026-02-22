@@ -123,6 +123,12 @@ pub struct BrokerConfig {
     pub alpaca_api_secret: Option<String>,
     #[serde(default)]
     pub alpaca_paper: bool,
+    #[serde(default = "default_alpaca_feed")]
+    pub alpaca_feed: String,
+}
+
+fn default_alpaca_feed() -> String {
+    "iex".to_string()
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -148,9 +154,13 @@ fn default_log_level() -> String {
 
 impl Settings {
     pub fn load() -> Result<Self, ConfigError> {
+        let env = std::env::var("RUN_MODE").unwrap_or_else(|_| "development".into());
+
         let s = Config::builder()
             // Start with default config file
-            .add_source(File::with_name("config").required(false))
+            .add_source(File::with_name("config/default"))
+            // Override with config file for current environment (e.g., production.toml)
+            .add_source(File::with_name(&format!("config/{}", env)).required(false))
             // Override with environment variables (e.g., APP_DATABASE_PASSWORD)
             .add_source(config::Environment::with_prefix("APP").separator("_"))
             .build()?;

@@ -9,6 +9,7 @@ RUN cargo install --path .
 FROM gcr.io/distroless/cc-debian12
 
 COPY --from=builder /usr/local/cargo/bin/depot_actor /usr/local/bin/depot_actor
-COPY config.toml .
+COPY config ./config
+ENV RUN_MODE=production
 
 CMD ["depot_actor"]

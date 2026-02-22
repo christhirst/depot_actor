@@ -1,6 +1,5 @@
 mod aggregator;
-mod data_buffer;
-mod db;
+pub mod data;
 mod grpc_server;
 mod indicator_client;
 mod indicator_server;
@@ -12,8 +11,8 @@ use tracing::info;
 // #[cfg(test)]
 // mod db_test; // Disabled - requires alpaca_api_client
 use crate::aggregator::Aggregator;
-use crate::data_buffer::DataBuffer;
-use crate::db::Database;
+use crate::data::data_buffer::DataBuffer;
+use crate::data::db::Database;
 use crate::indicator_client::IndicatorClient;
 use crate::indicator_server::start_indicator_server;
 use crate::settings::Settings;
@@ -151,10 +150,26 @@ async fn main() -> anyhow::Result<()> {
                 .map(String::from)
                 .collect::<Vec<_>>()
         };
+
+        // Determine the feed from settings or default to Iex
+        let feed_str = {
+            let s = settings.read().await;
+            s.trading
+                .as_ref()
+                .map(|t| t.broker.alpaca_feed.clone())
+                .unwrap_or_else(|| "iex".to_string())
+        };
+
+        let feed = match feed_str.to_lowercase().as_str() {
+            "test" => alpaca_api_client::Feed::Test,
+            "sip" => alpaca_api_client::Feed::Sip,
+            _ => alpaca_api_client::Feed::Iex,
+        };
+
         tokio::task::spawn_blocking(move || {
             let t_refs: Vec<&str> = trade_symbols.iter().map(|s| s.as_str()).collect();
             let b_refs: Vec<&str> = bar_symbols.iter().map(|s| s.as_str()).collect();
-            streamer.start(t_refs, b_refs);
+            streamer.start(feed, t_refs, b_refs);
         });
 
         // Start aggregator

@@ -1,4 +1,4 @@
-use crate::db::Database;
+use crate::data::db::Database;
 use crate::settings::SymbolConfig;
 use std::sync::Arc;
 use tokio::time::{interval, Duration};

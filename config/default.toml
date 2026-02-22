@@ -43,14 +43,15 @@ max_short_exposure_pct = 0.50  # Max 50% of portfolio in short positions
 buy_threshold = 0.6  # 60% weighted buy signals needed
 sell_threshold = 0.6  # 60% weighted sell signals needed
 
-[trading.broker]
-# broker_type = "depot"  # "depot" or "alpaca"
-# depot_url = "http://raynkami-balance-server.sliplane.app:50051"
- # For Alpaca:
- broker_type = "alpaca"
- alpaca_api_key = "PK9ZEOMKSV0ZN7FEZR6F"
- alpaca_api_secret = "ACZuRYMZ2GUFCkw0RVCquIF8Og7jTafT5itcAKIS"
- alpaca_paper = true
+ [trading.broker]
+ # broker_type = "depot"  # "depot" or "alpaca"
+ # depot_url = "http://raynkami-balance-server.sliplane.app:50051"
+  # For Alpaca:
+  broker_type = "alpaca"
+  alpaca_api_key = "PK9ZEOMKSV0ZN7FEZR6F"
+  alpaca_api_secret = "ACZuRYMZ2GUFCkw0RVCquIF8Og7jTafT5itcAKIS"
+  alpaca_paper = true
+  alpaca_feed = "test" # Options: "iex" (default), "sip", "test"
 
 # Trading strategies with weights
 [[trading.strategies]]
